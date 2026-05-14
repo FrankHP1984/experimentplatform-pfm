@@ -5,7 +5,7 @@
 
 [[redirects]]
   from   = "/api/*"
-  to     = "https://experimentplatform-pfm-production.up.railway.app/api/:splat"
+  to     = "https://efficient-celebration-production-c8f4.up.railway.app/api/:splat"
   status = 200
   force  = true
 
