@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(java *)",
+      "PowerShell(Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'C:\\\\proyectos\\\\experimentplatform-pfm\\\\backend'; .\\\\mvnw.cmd spring-boot:run\" -WindowStyle Normal)",
+      "PowerShell(Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'C:\\\\proyectos\\\\experimentplatform-pfm\\\\frontend'; npm run dev\" -WindowStyle Normal)"
+    ]
+  }
+}
