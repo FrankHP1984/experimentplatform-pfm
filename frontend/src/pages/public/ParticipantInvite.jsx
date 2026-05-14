@@ -187,7 +187,7 @@ export default function ParticipantInvite() {
         <div className={styles.left}>
           <div className={styles.logo}>
             <div className={styles.logoIcon}>{getInitials('Sopheron')}</div>
-            <div className={styles.logoText}>Empiri<span>a</span></div>
+            <div className={styles.logoText}>Seraphon</div>
           </div>
         </div>
         
@@ -219,7 +219,7 @@ export default function ParticipantInvite() {
       <div className={styles.left}>
         <div className={styles.logo}>
           <div className={styles.logoIcon}>{getInitials('Sopheron')}</div>
-          <div className={styles.logoText}>Empiri<span>a</span></div>
+          <div className={styles.logoText}>Seraphon</div>
         </div>
 
         <div className={styles.studyTag}>

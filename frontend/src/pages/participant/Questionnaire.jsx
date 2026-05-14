@@ -439,7 +439,7 @@ export default function Questionnaire() {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
-          <div className={styles.logo}>Empiri<span>a</span></div>
+          <div className={styles.logo}>Seraphon</div>
           <div className={styles.headerActions}>
             <button className={styles.btnGhostSm} onClick={() => navigate('/participant/dashboard')}>Salir</button>
           </div>
@@ -473,7 +473,7 @@ export default function Questionnaire() {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
-          <div className={styles.logo}>Empiri<span>a</span></div>
+          <div className={styles.logo}>Seraphon</div>
           <div className={styles.headerActions}>
             <button className={styles.btnGhostSm} onClick={() => navigate('/participant/dashboard')}>Salir</button>
           </div>
@@ -544,7 +544,7 @@ export default function Questionnaire() {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
-          <div className={styles.logo}>Empiri<span>a</span></div>
+          <div className={styles.logo}>Seraphon</div>
         </div>
         <div className={styles.main}>
           <div className={styles.qWrapper}>
@@ -588,7 +588,7 @@ export default function Questionnaire() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.logo}>Empiri<span>a</span></div>
+        <div className={styles.logo}>Seraphon</div>
 
         <div className={styles.studyContext}>
           <div className={styles.studyName}>{enrollment?.experimentTitle || 'Cuestionario'}</div>

@@ -335,7 +335,7 @@ export default function ExperimentWizard() {
 
       <div className={styles.topbar}>
         <div className={styles.topbarLeft}>
-          <div className={styles.logo}>Empiri<span className={styles.logoAccent}>a</span></div>
+          <div className={styles.logo}>Seraphon</div>
           <span className={styles.topbarTitle}>Configurar experimento</span>
         </div>
         <div className={styles.topbarRight}>

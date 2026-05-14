@@ -147,9 +147,9 @@ export default function Sidebar({ experimentCount = 0 }) {
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader}>
         <div className={styles.logo}>
-          <div className={styles.logoIcon}>E</div>
+          <div className={styles.logoIcon}>S</div>
           <span className={styles.logoText}>
-            Empiri<span className={styles.logoAccent}>a</span>
+            Seraphon
           </span>
         </div>
 
