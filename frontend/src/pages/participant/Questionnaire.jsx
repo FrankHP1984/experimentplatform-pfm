@@ -65,6 +65,12 @@ export default function Questionnaire() {
         const enrollmentData = await getEnrollment(enrollmentId)
         setEnrollment(enrollmentData)
 
+        if (enrollmentData.status === 'COMPLETED') {
+          setCompleted(true)
+          setLoading(false)
+          return
+        }
+
         const experimentData = await getExperiment(enrollmentData.experimentId)
         setDesignType(experimentData.designType)
 
@@ -273,9 +279,8 @@ export default function Questionnaire() {
         await submitQuestionResponse(enrollmentId, payload)
       }
 
-      // Si no hay fases futuras, completamos la inscripción
       if (!nextPhase) {
-        await completeEnrollment(enrollmentId)
+        await completeEnrollment(enrollmentId).catch(() => {})
       }
       setCompleted(true)
     } catch (error) {
