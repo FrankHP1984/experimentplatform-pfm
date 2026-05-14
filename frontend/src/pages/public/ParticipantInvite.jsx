@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getInvitation, acceptInvitation, declineInvitation } from '../../api/invitations'
 import { supabase } from '../../api/client'
-import { syncUser } from '../../api/users'
+import { syncUser, fetchMe } from '../../api/users'
+import { useAuthContext } from '../../context/AuthContext'
 import styles from './ParticipantInvite.module.css'
 
 const IconCheck = () => (
@@ -57,7 +58,8 @@ export default function ParticipantInvite() {
   const [error, setError] = useState(null)
   const [step, setStep] = useState(1)
   const [accepted, setAccepted] = useState(false)
-  
+  const { setUser } = useAuthContext()
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -127,6 +129,10 @@ export default function ParticipantInvite() {
         birthDate: formData.birthDate,
         gender: formData.gender,
       })
+
+      // 4. Cargar perfil en el AuthContext para que PrivateRoute lo reconozca
+      const profile = await fetchMe()
+      setUser(profile)
 
       setAccepted(true)
     } catch (error) {
