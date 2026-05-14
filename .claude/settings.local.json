@@ -3,7 +3,16 @@
     "allow": [
       "PowerShell(java *)",
       "PowerShell(Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'C:\\\\proyectos\\\\experimentplatform-pfm\\\\backend'; .\\\\mvnw.cmd spring-boot:run\" -WindowStyle Normal)",
-      "PowerShell(Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'C:\\\\proyectos\\\\experimentplatform-pfm\\\\frontend'; npm run dev\" -WindowStyle Normal)"
+      "PowerShell(Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'C:\\\\proyectos\\\\experimentplatform-pfm\\\\frontend'; npm run dev\" -WindowStyle Normal)",
+      "PowerShell(iwr https://railway.app/install.ps1 -useb | iex)",
+      "PowerShell(railway status *)",
+      "PowerShell(railway list *)",
+      "PowerShell(railway link *)",
+      "PowerShell(railway up *)",
+      "PowerShell(npm install *)",
+      "PowerShell(netlify *)",
+      "PowerShell($data = '{\"site_id\":\"rococo-rolypoly-1a4e35\",\"body\":{\"name\":\"seraphon\"}}'; netlify api updateSite --data $data)",
+      "PowerShell(railway deployment *)"
     ]
   }
 }
