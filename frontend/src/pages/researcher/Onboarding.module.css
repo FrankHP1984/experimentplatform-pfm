@@ -1,0 +1,465 @@
+/* ─── Page shell ─── */
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem 4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle background glow */
+.glow {
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(108,77,230,0.12) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Logo ─── */
+.logoBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 36px;
+  position: relative;
+  z-index: 1;
+}
+
+.logoIcon {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.logoText {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.logoAccent {
+  color: var(--cyan);
+}
+
+/* ─── Step indicator ─── */
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.stepIndicatorItem {
+  display: flex;
+  align-items: center;
+}
+
+.stepDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+.stepDot svg {
+  width: 14px;
+  height: 14px;
+}
+
+.stepDotPending {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  color: var(--muted);
+}
+
+.stepDotActive {
+  background: linear-gradient(135deg, var(--violet), #5A3BD4);
+  border: none;
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(108,77,230,0.2);
+}
+
+.stepDotDone {
+  background: rgba(0,212,170,0.15);
+  border: 1.5px solid rgba(0,212,170,0.3);
+  color: var(--cyan);
+}
+
+.stepLine {
+  width: 56px;
+  height: 2px;
+  background: rgba(255,255,255,0.07);
+  transition: background 0.3s;
+}
+
+.stepLineDone {
+  background: linear-gradient(90deg, rgba(0,212,170,0.4), rgba(108,77,230,0.2));
+}
+
+/* ─── Card ─── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 520px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+}
+
+.cardHead {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+
+.cardSubtitle {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+/* ─── Step content ─── */
+.stepContent {
+  padding: 24px 32px;
+  min-height: 260px;
+}
+
+/* ─── Form elements ─── */
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text);
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s;
+}
+.input:focus {
+  border-color: var(--violet);
+  background: rgba(108,77,230,0.06);
+  box-shadow: 0 0 0 3px rgba(108,77,230,0.12);
+}
+.input::placeholder {
+  color: rgba(138,150,176,0.45);
+}
+
+/* ─── Research area chips ─── */
+.chipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.03);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s;
+}
+.chip:hover {
+  border-color: var(--border);
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+}
+
+.chipActive {
+  background: rgba(108,77,230,0.15);
+  border-color: rgba(108,77,230,0.35);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ─── Design options ─── */
+.designList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.designList::-webkit-scrollbar { width: 3px; }
+.designList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+.designOption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.18s;
+  width: 100%;
+}
+.designOption:hover {
+  border-color: var(--border);
+  background: rgba(255,255,255,0.04);
+}
+
+.designOptionActive {
+  background: rgba(108,77,230,0.1);
+  border-color: rgba(108,77,230,0.3);
+}
+
+.designOptionLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.designOptionDesc {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* ─── Step 3: Ready ─── */
+.readyBlock {
+  text-align: center;
+  padding: 8px 0 20px;
+}
+
+.readyAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 auto 14px;
+}
+
+.readyName {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.readyInstitution {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.readyBadge {
+  display: inline-block;
+  background: rgba(108,77,230,0.15);
+  border: 1px solid rgba(108,77,230,0.25);
+  color: var(--violet);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.readyFeatures {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.readyFeature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.readyFeatureIcon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0,212,170,0.12);
+  border: 1px solid rgba(0,212,170,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--cyan);
+}
+.readyFeatureIcon svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* ─── Error ─── */
+.error {
+  color: var(--danger);
+  font-size: 12.5px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* ─── Card footer ─── */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px 24px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.footerLeft,
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Buttons */
+.btnBack,
+.btnSkip,
+.btnNext,
+.btnFinish {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  border: none;
+}
+.btnBack svg,
+.btnSkip svg,
+.btnNext svg,
+.btnFinish svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.btnBack {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--muted);
+}
+.btnBack:hover:not(:disabled) {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btnSkip {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  padding-left: 0;
+}
+.btnSkip:hover {
+  color: var(--text);
+}
+
+.btnNext {
+  background: linear-gradient(135deg, var(--violet), #5A3BD4);
+  color: #fff;
+  box-shadow: 0 3px 14px rgba(108,77,230,0.3);
+}
+.btnNext:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 20px rgba(108,77,230,0.45);
+}
+.btnNext:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btnFinish {
+  background: linear-gradient(135deg, var(--cyan), #00B891);
+  color: #080F1E;
+  box-shadow: 0 3px 14px rgba(0,212,170,0.3);
+  font-weight: 700;
+}
+.btnFinish:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 20px rgba(0,212,170,0.45);
+}
+.btnFinish:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── Step label ─── */
+.stepLabel {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--muted);
+  opacity: 0.6;
+  position: relative;
+  z-index: 1;
+}

@@ -1,0 +1,19 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-draft     { color: var(--muted);   background: rgba(107,122,153,0.1); }
+.status-active    { color: var(--success); background: rgba(34,197,94,0.1);  }
+.status-paused    { color: var(--warn);    background: rgba(240,165,0,0.1);  }
+.status-finished  { color: var(--blue);    background: rgba(96,165,250,0.1); }
+.status-cancelled { color: var(--danger);  background: rgba(224,92,107,0.1); }
+.status-pending   { color: var(--warn);    background: rgba(240,165,0,0.1);  }
+.status-completed { color: var(--success); background: rgba(34,197,94,0.1);  }
+.status-withdrawn { color: var(--muted);   background: rgba(107,122,153,0.1);}

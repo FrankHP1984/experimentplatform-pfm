@@ -1,0 +1,43 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  user-select: none;
+}
+.toggle.disabled { opacity: 0.5; cursor: not-allowed; }
+
+.input { display: none; }
+
+.track {
+  width: 40px;
+  height: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  position: relative;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.input:checked + .track {
+  background: var(--violet);
+  border-color: var(--violet);
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: var(--muted);
+  border-radius: 50%;
+  transition: transform var(--transition), background var(--transition);
+}
+
+.input:checked + .track .thumb {
+  transform: translateX(18px);
+  background: #fff;
+}
+
+.label { font-size: 0.875rem; color: var(--text); }
