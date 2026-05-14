@@ -80,6 +80,11 @@ public class EnrollmentService {
             throw new BadRequestException("Experiment is not active");
         }
 
+        if (experiment.getConsentText() != null && !experiment.getConsentText().isBlank()
+                && !Boolean.TRUE.equals(request.getConsentAgreed())) {
+            throw new ForbiddenException("You must agree to the consent form to participate");
+        }
+
         Enrollment enrollment = new Enrollment(participant, experiment, EnrollmentStatus.ACTIVE);
 
         if (request.getGroupId() != null) {

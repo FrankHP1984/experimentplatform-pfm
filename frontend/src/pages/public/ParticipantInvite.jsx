@@ -139,11 +139,10 @@ export default function ParticipantInvite() {
   const handleDecline = async () => {
     try {
       await declineInvitation(token)
-      navigate('/')
-    } catch (error) {
-      console.log(error)
-      setError('No se pudo rechazar')
+    } catch {
+      // El usuario puede no estar autenticado aún; se navega igualmente
     }
+    navigate('/')
   }
 
   const getInitials = (name) => {
@@ -223,54 +222,12 @@ export default function ParticipantInvite() {
         </div>
 
         <h1 className={styles.studyTitle}>
-          {invitation?.experiment?.name || 'Estudio de investigación'}
+          {invitation?.experimentTitle || 'Estudio de investigación'}
         </h1>
 
         <p className={styles.studyDesc}>
-          {invitation?.experiment?.description || 'Has sido invitado a participar en este estudio de investigación.'}
+          Has sido invitado a participar en este estudio de investigación.
         </p>
-
-        <div className={styles.studyDetails}>
-          <div className={styles.studyDetail}>
-            <div className={styles.studyDetailIcon}>
-              <IconUser />
-            </div>
-            <span>
-              Participantes esperados: <strong>{invitation?.experiment?.targetParticipants || 'No especificado'}</strong>
-            </span>
-          </div>
-          <div className={styles.studyDetail}>
-            <div className={styles.studyDetailIcon}>
-              <IconClock />
-            </div>
-            <span>
-              Duración estimada: <strong>{invitation?.experiment?.estimatedDuration || '30-45 minutos'}</strong>
-            </span>
-          </div>
-          <div className={styles.studyDetail}>
-            <div className={styles.studyDetailIcon}>
-              <IconGrid />
-            </div>
-            <span>
-              Diseño: <strong>{invitation?.experiment?.designType || 'Experimental'}</strong>
-            </span>
-          </div>
-        </div>
-
-        <div className={styles.researcherCard}>
-          <div className={styles.researcherAvatar}>
-            {getInitials(invitation?.experiment?.researcher?.firstName || invitation?.experiment?.researcher?.email)}
-          </div>
-          <div>
-            <div className={styles.researcherLabel}>Investigador principal</div>
-            <div className={styles.researcherName}>
-              {invitation?.experiment?.researcher?.firstName} {invitation?.experiment?.researcher?.lastName || invitation?.experiment?.researcher?.email}
-            </div>
-            <div className={styles.researcherInst}>
-              {invitation?.experiment?.researcher?.institution || 'Universidad'}
-            </div>
-          </div>
-        </div>
 
         <div className={styles.trustBadges}>
           <div className={styles.trustBadge}>

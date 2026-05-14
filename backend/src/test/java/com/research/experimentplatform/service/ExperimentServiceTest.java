@@ -10,8 +10,11 @@ import com.research.experimentplatform.model.Experiment;
 import com.research.experimentplatform.model.ExperimentStatus;
 import com.research.experimentplatform.model.User;
 import com.research.experimentplatform.model.UserRole;
+import com.research.experimentplatform.model.Phase;
 import com.research.experimentplatform.repository.EnrollmentRepository;
 import com.research.experimentplatform.repository.ExperimentRepository;
+import com.research.experimentplatform.repository.GroupRepository;
+import com.research.experimentplatform.repository.PhaseRepository;
 import com.research.experimentplatform.repository.UserRepository;
 import com.research.experimentplatform.security.OwnershipChecker;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +24,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,6 +41,10 @@ class ExperimentServiceTest {
     private ExperimentRepository experimentRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private PhaseRepository phaseRepository;
+    @Mock
+    private GroupRepository groupRepository;
     @Mock
     private EnrollmentRepository enrollmentRepository;
     @Mock
@@ -103,8 +112,12 @@ class ExperimentServiceTest {
         UpdateExperimentRequest request = new UpdateExperimentRequest(
                 null, null, null, null, null, ExperimentStatus.ACTIVE, null, null);
 
+        Phase fase1 = new Phase(); fase1.setId(1L); fase1.setStartDate(LocalDateTime.now().minusDays(10));
+        Phase fase2 = new Phase(); fase2.setId(2L); fase2.setStartDate(LocalDateTime.now().minusDays(5));
+
         when(experimentRepository.findById(1L)).thenReturn(Optional.of(experimento));
         when(ownershipChecker.canModify(experimento, "supa-inv-1")).thenReturn(true);
+        when(phaseRepository.findByExperimentId(1L)).thenReturn(List.of(fase1, fase2));
         when(enrollmentRepository.findByExperimentIdAndStatus(1L, com.research.experimentplatform.model.EnrollmentStatus.PENDING))
                 .thenReturn(java.util.List.of());
         when(experimentRepository.save(any(Experiment.class))).thenAnswer(i -> i.getArgument(0));
