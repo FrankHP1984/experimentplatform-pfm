@@ -116,7 +116,7 @@ export default function DashboardParticipant() {
         <div className={styles.content}>
           <div className={styles.greeting}>
             <div className={styles.greetingTitle}>
-              {getGreeting()}, {getUserName()}
+              {getGreeting()}
             </div>
             <div className={styles.greetingSub}>
               Aquí puedes ver tus estudios activos y completar cuestionarios pendientes.

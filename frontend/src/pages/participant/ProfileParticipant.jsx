@@ -123,21 +123,17 @@ export default function ProfileParticipant() {
                 <div className={styles.formGrid}>
                   <div className={styles.field}>
                     <label>Nombre</label>
-                    <input type="text" value={formData.firstName} readOnly placeholder="Tu nombre" />
+                    <div className={styles.fieldValue}>{formData.firstName || '—'}</div>
                   </div>
 
                   <div className={styles.field}>
                     <label>Apellidos</label>
-                    <input type="text" value={formData.lastName} readOnly placeholder="Tus apellidos" />
+                    <div className={styles.fieldValue}>{formData.lastName || '—'}</div>
                   </div>
 
                   <div className={`${styles.field} ${styles.full}`}>
                     <label>Email</label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      readOnly
-                    />
+                    <div className={styles.fieldValue}>{formData.email}</div>
                   </div>
 
                 </div>

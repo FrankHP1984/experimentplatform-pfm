@@ -239,6 +239,12 @@
   cursor: default;
 }
 
+.fieldValue {
+  font-size: 14px;
+  color: var(--text);
+  padding: 0.625rem 0;
+}
+
 .field select option {
   background: var(--card);
 }
