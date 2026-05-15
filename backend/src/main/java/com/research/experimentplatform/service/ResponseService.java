@@ -60,10 +60,9 @@ public class ResponseService {
         LocalDateTime now = LocalDateTime.now();
         var phase = question.getPhase();
         var designType = enrollment.getExperiment().getDesignType();
-        // Date-window check only applies to time-gated designs (LONGITUDINAL, CROSS_SECTIONAL).
-        // PRETEST_POSTTEST, BETWEEN_SUBJECTS and WITHIN_SUBJECTS are sequenced by completion, not by calendar.
-        boolean isTimeGated = designType == DesignType.LONGITUDINAL
-                || designType == DesignType.CROSS_SECTIONAL;
+        // Date-window check only applies to CROSS_SECTIONAL (truly time-gated).
+        // All other designs (PRETEST_POSTTEST, BETWEEN_SUBJECTS, WITHIN_SUBJECTS, LONGITUDINAL) are sequenced by completion.
+        boolean isTimeGated = designType == DesignType.CROSS_SECTIONAL;
         if (isTimeGated) {
             if (phase.getStartDate() != null && phase.getStartDate().isAfter(now)) {
                 throw new BadRequestException("This phase has not started yet");
@@ -84,9 +83,10 @@ public class ResponseService {
             }
         }
 
-        // En PRETEST_POSTTEST y BETWEEN_SUBJECTS bloqueamos una fase hasta que la anterior esté completamente respondida
+        // En PRETEST_POSTTEST, BETWEEN_SUBJECTS y LONGITUDINAL bloqueamos una fase hasta que la anterior esté completamente respondida
         if (enrollment.getExperiment().getDesignType() == DesignType.PRETEST_POSTTEST ||
-            enrollment.getExperiment().getDesignType() == DesignType.BETWEEN_SUBJECTS) {
+            enrollment.getExperiment().getDesignType() == DesignType.BETWEEN_SUBJECTS ||
+            enrollment.getExperiment().getDesignType() == DesignType.LONGITUDINAL) {
             List<Phase> fases = phaseRepository.findByExperimentIdOrderByPhaseOrderAsc(
                     enrollment.getExperiment().getId()
             );
