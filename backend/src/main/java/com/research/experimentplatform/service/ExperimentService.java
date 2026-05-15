@@ -257,6 +257,11 @@ public class ExperimentService {
         if (startDate != null && endDate != null && !endDate.isAfter(startDate)) {
             throw new BadRequestException("End date must be after start date");
         }
+        
+        // No se puede crear un experimento que ya haya finalizado
+        if (endDate != null && endDate.isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("End date cannot be in the past");
+        }
     }
 
     private void validateStatusTransition(ExperimentStatus currentStatus, ExperimentStatus newStatus) {

@@ -159,6 +159,17 @@ export default function Questionnaire() {
             }
 
             if (!todasRespondidas) {
+              // Verificar si la fase ya ha comenzado (si tiene startDate)
+              if (fase.startDate) {
+                const faseStart = new Date(fase.startDate)
+                if (faseStart > now) {
+                  // La fase aún no ha comenzado, mostrar pantalla de espera
+                  setWaitingFor({ reason: 'phase', label: fase.name, startDate: fase.startDate })
+                  setLoading(false)
+                  return
+                }
+              }
+              
               faseActual = fase
               indiceFaseActual = i
               break
