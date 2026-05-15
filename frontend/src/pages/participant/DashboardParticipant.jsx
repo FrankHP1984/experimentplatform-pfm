@@ -73,8 +73,7 @@ export default function DashboardParticipant() {
   }
 
   const getUserName = () => {
-    if (user?.firstName) return user.firstName
-    return user?.email?.split('@')[0] || 'Participante'
+    return user?.firstName || 'Participante'
   }
 
   const getStatusClass = (status) => {
