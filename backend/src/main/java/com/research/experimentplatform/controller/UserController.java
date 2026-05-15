@@ -34,6 +34,13 @@ public class UserController {
         return ResponseEntity.ok(userService.updateMe(supabaseId, request));
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMe(Authentication authentication) {
+        String supabaseId = (String) authentication.getDetails();
+        userService.deleteMe(supabaseId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/sync")
     public ResponseEntity<UserDTO> syncUser(
             Authentication authentication,

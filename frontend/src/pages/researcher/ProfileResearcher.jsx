@@ -1,7 +1,8 @@
 ﻿import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Sidebar from '../../components/layout/Sidebar'
 import { useAuthContext } from '../../context/AuthContext'
-import { fetchMe } from '../../api/users'
+import { fetchMe, deleteMe } from '../../api/users'
 import styles from './ProfileResearcher.module.css'
 
 const IconCheck = () => (
@@ -48,10 +49,13 @@ const IconDownload = () => (
 )
 
 export default function ProfileResearcher() {
-  const { user } = useAuthContext()
+  const { user, logout } = useAuthContext()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('personal')
   const [pwdModal, setPwdModal] = useState(false)
   const [deleteModal, setDeleteModal] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   
   const [formData, setFormData] = useState({
@@ -267,7 +271,7 @@ export default function ProfileResearcher() {
                 <div className={styles.dangerText}>
                   La eliminación de tu cuenta es permanente. Todos tus experimentos, participantes y respuestas serán borrados de forma irreversible. Esta acción no puede deshacerse.
                 </div>
-                <button className={styles.btnDanger} onClick={() => setDeleteModal(true)}>
+                <button className={styles.btnDanger} onClick={() => { setDeleteConfirm(''); setDeleteModal(true) }}>
                   Eliminar cuenta permanentemente
                 </button>
               </div>
@@ -479,29 +483,46 @@ export default function ProfileResearcher() {
               fontSize: 13,
               color: 'var(--muted)'
             }}>
-              Se eliminarán todos tus experimentos (1), participantes (9), respuestas (108) y cualquier dato asociado a tu cuenta.
+              Se eliminarán todos tus experimentos, participantes, respuestas y cualquier dato asociado a tu cuenta.
             </div>
             <div className={styles.field}>
               <label>Confirma tu correo</label>
-              <input type="email" placeholder={formData.email} />
+              <input
+                type="email"
+                placeholder={formData.email}
+                value={deleteConfirm}
+                onChange={e => setDeleteConfirm(e.target.value)}
+              />
             </div>
             <div className={styles.modalActions}>
               <button className={styles.btnGhost} onClick={() => setDeleteModal(false)}>Cancelar</button>
               <button
                 style={{
-                  background: 'var(--danger)',
+                  background: deleteConfirm === formData.email ? 'var(--danger)' : 'var(--surface-2,#333)',
                   color: 'white',
                   border: 'none',
                   padding: '9px 20px',
                   borderRadius: 8,
                   fontSize: 13,
                   fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: 'Inter, sans-serif'
+                  cursor: deleteConfirm === formData.email ? 'pointer' : 'not-allowed',
+                  fontFamily: 'Inter, sans-serif',
+                  opacity: deleting ? 0.7 : 1
                 }}
-                onClick={() => setDeleteModal(false)}
+                disabled={deleteConfirm !== formData.email || deleting}
+                onClick={async () => {
+                  setDeleting(true)
+                  try {
+                    await deleteMe()
+                    await logout()
+                    navigate('/')
+                  } catch {
+                    setDeleting(false)
+                    alert('Error al eliminar la cuenta. Inténtalo de nuevo.')
+                  }
+                }}
               >
-                Eliminar cuenta
+                {deleting ? 'Eliminando...' : 'Eliminar cuenta'}
               </button>
             </div>
           </div>

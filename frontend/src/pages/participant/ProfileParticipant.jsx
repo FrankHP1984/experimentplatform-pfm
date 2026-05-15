@@ -1,7 +1,8 @@
 ﻿import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Sidebar from '../../components/layout/Sidebar'
 import { useAuthContext } from '../../context/AuthContext'
-import { fetchMe } from '../../api/users'
+import { fetchMe, deleteMe } from '../../api/users'
 import styles from './ProfileParticipant.module.css'
 
 
@@ -12,9 +13,26 @@ const IconCheck = () => (
 )
 
 export default function ProfileParticipant() {
-  const { user } = useAuthContext()
+  const { user, logout } = useAuthContext()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('personal')
   const [loadingData, setLoadingData] = useState(true)
+  const [deleteModal, setDeleteModal] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== formData.email) return
+    setDeleting(true)
+    try {
+      await deleteMe()
+      await logout()
+      navigate('/')
+    } catch {
+      setDeleting(false)
+      alert('Error al eliminar la cuenta. Inténtalo de nuevo.')
+    }
+  }
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -151,10 +169,10 @@ export default function ProfileParticipant() {
               <div className={styles.dangerZone}>
                 <div className={styles.dangerTitle}>Eliminar cuenta</div>
                 <div className={styles.dangerText}>
-                  Al eliminar tu cuenta, se eliminarán todos tus datos personales. Tus respuestas en estudios activos se mantendrán de forma anónima.
+                  Al eliminar tu cuenta, se borrarán todos tus datos personales y tus inscripciones en estudios. Esta acción no se puede deshacer.
                 </div>
-                <button className={styles.btnDanger}>
-                  Solicitar eliminación de cuenta
+                <button className={styles.btnDanger} onClick={() => { setDeleteConfirm(''); setDeleteModal(true) }}>
+                  Eliminar cuenta
                 </button>
               </div>
             </div>
@@ -179,6 +197,40 @@ export default function ProfileParticipant() {
           </div>
         </div>
       </div>
+
+      {deleteModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+          onClick={e => e.target === e.currentTarget && setDeleteModal(false)}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '28px 28px 24px', width: 400, maxWidth: '90vw' }}>
+            <h2 style={{ margin: '0 0 8px', fontSize: 18, color: 'var(--danger,#f87171)' }}>Eliminar cuenta</h2>
+            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+              Esta acción es permanente e irreversible. Para confirmar, escribe tu correo electrónico.
+            </p>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 6 }}>Confirma tu correo</label>
+              <input
+                type="email"
+                placeholder={formData.email}
+                value={deleteConfirm}
+                onChange={e => setDeleteConfirm(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', fontSize: 13, boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button onClick={() => setDeleteModal(false)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'none', color: 'var(--text)', cursor: 'pointer', fontSize: 13 }}>
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirm !== formData.email || deleting}
+                style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: deleteConfirm === formData.email ? 'var(--danger,#f87171)' : 'var(--surface-2,#333)', color: 'white', cursor: deleteConfirm === formData.email ? 'pointer' : 'not-allowed', fontSize: 13, fontWeight: 600 }}
+              >
+                {deleting ? 'Eliminando...' : 'Eliminar cuenta'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )

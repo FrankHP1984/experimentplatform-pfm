@@ -3,23 +3,37 @@ package com.research.experimentplatform.service;
 import com.research.experimentplatform.dto.UpdateUserRequest;
 import com.research.experimentplatform.dto.UserDTO;
 import com.research.experimentplatform.exception.ResourceNotFoundException;
+import com.research.experimentplatform.model.Enrollment;
 import com.research.experimentplatform.model.User;
 import com.research.experimentplatform.model.UserRole;
+import com.research.experimentplatform.repository.EnrollmentRepository;
+import com.research.experimentplatform.repository.ExperimentRepository;
+import com.research.experimentplatform.repository.ParticipantRepository;
 import com.research.experimentplatform.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ExperimentRepository experimentRepository;
+    private final ParticipantRepository participantRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository,
+                       ExperimentRepository experimentRepository,
+                       ParticipantRepository participantRepository,
+                       EnrollmentRepository enrollmentRepository) {
         this.userRepository = userRepository;
+        this.experimentRepository = experimentRepository;
+        this.participantRepository = participantRepository;
+        this.enrollmentRepository = enrollmentRepository;
     }
 
     public UserDTO getUserBySupabaseId(String supabaseId) {
@@ -85,6 +99,26 @@ public class UserService {
             throw new ResourceNotFoundException("User not found");
         }
         userRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void deleteMe(String supabaseId) {
+        User user = userRepository.findBySupabaseId(supabaseId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (user.getRole() == UserRole.RESEARCHER) {
+            // Delete all experiments (cascades to phases, groups, invitations, enrollments, responses)
+            experimentRepository.deleteAll(experimentRepository.findByOwnerId(user.getId()));
+        } else if (user.getRole() == UserRole.PARTICIPANT) {
+            participantRepository.findByUserId(user.getId()).ifPresent(participant -> {
+                // Delete enrollments (cascades to responses)
+                List<Enrollment> enrollments = enrollmentRepository.findByParticipantId(participant.getId());
+                enrollmentRepository.deleteAll(enrollments);
+                participantRepository.delete(participant);
+            });
+        }
+
+        userRepository.delete(user);
     }
 
     @Transactional
