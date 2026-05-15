@@ -60,9 +60,10 @@ public class ResponseService {
         LocalDateTime now = LocalDateTime.now();
         var phase = question.getPhase();
         var designType = enrollment.getExperiment().getDesignType();
-        // Date-window check only applies to CROSS_SECTIONAL (truly time-gated).
-        // All other designs (PRETEST_POSTTEST, BETWEEN_SUBJECTS, WITHIN_SUBJECTS, LONGITUDINAL) are sequenced by completion.
-        boolean isTimeGated = designType == DesignType.CROSS_SECTIONAL;
+        // Date-window check applies to time-gated designs (LONGITUDINAL, CROSS_SECTIONAL).
+        // PRETEST_POSTTEST, BETWEEN_SUBJECTS and WITHIN_SUBJECTS are purely sequenced by completion.
+        boolean isTimeGated = designType == DesignType.LONGITUDINAL
+                || designType == DesignType.CROSS_SECTIONAL;
         if (isTimeGated) {
             if (phase.getStartDate() != null && phase.getStartDate().isAfter(now)) {
                 throw new BadRequestException("This phase has not started yet");
