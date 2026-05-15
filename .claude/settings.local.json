@@ -13,7 +13,8 @@
       "PowerShell(netlify *)",
       "PowerShell($data = '{\"site_id\":\"rococo-rolypoly-1a4e35\",\"body\":{\"name\":\"seraphon\"}}'; netlify api updateSite --data $data)",
       "PowerShell(railway deployment *)",
-      "PowerShell(Get-Command *)"
+      "PowerShell(Get-Command *)",
+      "PowerShell(cd \"C:\\\\proyectos\\\\experimentplatform-pfm\"; \\(Get-ChildItem -Recurse memoria/ | Measure-Object\\).Count)"
     ]
   }
 }

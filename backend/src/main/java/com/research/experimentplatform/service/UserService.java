@@ -59,8 +59,8 @@ public class UserService {
             User existing = bySupabaseId.get();
             existing.setEmail(email);
             if (role != null) existing.setRole(role);
-            if (firstName != null && existing.getFirstName() == null) existing.setFirstName(firstName);
-            if (lastName  != null && existing.getLastName()  == null) existing.setLastName(lastName);
+            if (firstName != null && !firstName.isBlank() && (existing.getFirstName() == null || existing.getFirstName().isBlank())) existing.setFirstName(firstName);
+            if (lastName  != null && !lastName.isBlank()  && (existing.getLastName()  == null || existing.getLastName().isBlank()))  existing.setLastName(lastName);
             return new SyncResult(convertToDTO(userRepository.save(existing)), false);
         }
 
@@ -70,8 +70,8 @@ public class UserService {
             User existing = byEmail.get();
             existing.setSupabaseId(supabaseId);
             if (role != null) existing.setRole(role);
-            if (firstName != null && existing.getFirstName() == null) existing.setFirstName(firstName);
-            if (lastName  != null && existing.getLastName()  == null) existing.setLastName(lastName);
+            if (firstName != null && !firstName.isBlank() && (existing.getFirstName() == null || existing.getFirstName().isBlank())) existing.setFirstName(firstName);
+            if (lastName  != null && !lastName.isBlank()  && (existing.getLastName()  == null || existing.getLastName().isBlank()))  existing.setLastName(lastName);
             return new SyncResult(convertToDTO(userRepository.save(existing)), false);
         }
 

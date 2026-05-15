@@ -119,7 +119,7 @@ export default function ParticipantInvite() {
       }
 
       // 2. Sincronizar usuario en el backend como PARTICIPANT
-      await syncUser('PARTICIPANT')
+      await syncUser('PARTICIPANT', formData.firstName, formData.lastName)
 
       // 3. Aceptar la invitación (ahora hay sesión activa con JWT)
       await acceptInvitation(token, {

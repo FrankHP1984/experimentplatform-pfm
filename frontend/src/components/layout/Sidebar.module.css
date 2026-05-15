@@ -196,3 +196,99 @@
   padding: 12px;
   border-top: 1px solid rgba(255,255,255,0.06);
 }
+
+/* ─── Mobile responsive ─── */
+.hamburger {
+  display: none;
+}
+
+.mobileOverlay {
+  display: none;
+}
+
+.closeRow {
+  display: none;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.closeBtn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+.closeBtn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 300;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .hamburger {
+    display: flex;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 200;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.15s;
+  }
+  .hamburger:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .hamburger svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+  }
+
+  .mobileOverlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 250;
+    animation: overlayFadeIn 0.2s ease;
+  }
+
+  .closeRow {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 12px 0;
+    flex-shrink: 0;
+  }
+}

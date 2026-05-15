@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Fondo redondeado -->
+  <rect width="512" height="512" rx="128" fill="#0a0f1e"/>
+  <!-- S estilizada con trazo de gradiente violeta-cyan -->
+  <defs>
+    <linearGradient id="g" x1="96" y1="96" x2="416" y2="416" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6C4DE6"/>
+      <stop offset="100%" stop-color="#00D4AA"/>
+    </linearGradient>
+  </defs>
+  <path
+    d="M320 152C320 152 288 128 240 128C184 128 144 160 144 200C144 240 176 256 224 272C272 288 312 304 312 344C312 376 280 392 240 392C200 392 160 368 160 368"
+    stroke="url(#g)"
+    stroke-width="40"
+    stroke-linecap="round"
+  />
+</svg>

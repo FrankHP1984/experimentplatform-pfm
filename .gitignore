@@ -14,3 +14,11 @@ frontend/.env.local
 # OS
 .DS_Store
 Thumbs.db
+
+# Local secrets (never commit)
+.env.railway
+
+# Claude memory
+.claude/
+memoria/
+memoria_*.txt

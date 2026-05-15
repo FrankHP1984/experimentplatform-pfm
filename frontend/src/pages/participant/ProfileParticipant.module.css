@@ -368,8 +368,14 @@
     grid-template-columns: 1fr;
     padding: 1rem;
   }
-  
+
   .formGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    padding-left: 64px;
   }
 }

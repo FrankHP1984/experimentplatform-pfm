@@ -389,8 +389,12 @@
   .content {
     padding: 1rem;
   }
-  
+
   .studyTimeline {
     overflow-x: auto;
+  }
+
+  .topbar {
+    padding-left: 64px;
   }
 }
