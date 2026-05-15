@@ -133,8 +133,12 @@ export default function Questionnaire() {
           return phase.groupId === enrollmentData.groupId
         })
 
-        // ─── PRETEST_POSTTEST: mostrar solo la primera fase sin completar ───
-        if (experimentData.designType === 'PRETEST_POSTTEST') {
+        // ─── Diseños secuenciales: mostrar solo la primera fase sin completar ───
+        // PRETEST_POSTTEST, BETWEEN_SUBJECTS, WITHIN_SUBJECTS, LONGITUDINAL
+        if (experimentData.designType === 'PRETEST_POSTTEST' || 
+            experimentData.designType === 'BETWEEN_SUBJECTS' ||
+            experimentData.designType === 'WITHIN_SUBJECTS' ||
+            experimentData.designType === 'LONGITUDINAL') {
           const respuestasExistentes = await getEnrollmentResponses(enrollmentId)
           const idsRespondidos = new Set(respuestasExistentes.map(r => r.questionId))
           setYaRespondidas(idsRespondidos)
