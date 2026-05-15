@@ -489,11 +489,6 @@ export default function ExperimentDetail() {
         </div>
         <div className={styles.topbarActions}>
           <button className={`${styles.topbarBtn} ${styles.topbarBtnGhost}`}
-            onClick={() => navigate(`/experiments/${id}/wizard`)}>
-            <IcoEdit />
-            Editar
-          </button>
-          <button className={`${styles.topbarBtn} ${styles.topbarBtnGhost}`}
             onClick={() => setInviteModal(true)}>
             <IcoLink />
             Enlace de invitacion
