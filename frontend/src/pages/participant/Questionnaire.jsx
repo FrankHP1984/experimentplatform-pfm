@@ -133,8 +133,8 @@ export default function Questionnaire() {
           return phase.groupId === enrollmentData.groupId
         })
 
-        // ─── PRETEST_POSTTEST: mostrar solo la primera fase sin completar ───
-        if (experimentData.designType === 'PRETEST_POSTTEST') {
+        // ─── PRETEST_POSTTEST y LONGITUDINAL: mostrar solo la primera fase sin completar ───
+        if (experimentData.designType === 'PRETEST_POSTTEST' || experimentData.designType === 'LONGITUDINAL') {
           const respuestasExistentes = await getEnrollmentResponses(enrollmentId)
           const idsRespondidos = new Set(respuestasExistentes.map(r => r.questionId))
           setYaRespondidas(idsRespondidos)
