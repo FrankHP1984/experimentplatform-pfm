@@ -96,4 +96,11 @@ public class EnrollmentController {
         enrollmentService.withdrawEnrollment(enrollmentId);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{enrollmentId}/force")
+    @PreAuthorize("hasAnyRole('RESEARCHER', 'ADMIN')")
+    public ResponseEntity<Void> forceDeleteEnrollment(@PathVariable Long enrollmentId) {
+        enrollmentService.forceDeleteEnrollment(enrollmentId);
+        return ResponseEntity.noContent().build();
+    }
 }

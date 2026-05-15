@@ -382,7 +382,11 @@ export default function ParticipantInvite() {
                   onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
                 />
                 <label className={styles.checkboxLabel}>
-                  He leído y acepto participar voluntariamente en este estudio. Entiendo que mis datos serán tratados de forma confidencial y anónima, y que puedo retirarme en cualquier momento sin penalización.
+                  He leído y acepto participar voluntariamente en este estudio. Entiendo que mis datos serán tratados de forma confidencial y anónima según la{' '}
+                  <a href="/politica-privacidad" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--violet)', textDecoration: 'underline' }}>
+                    política de tratamiento de datos
+                  </a>
+                  , y que puedo retirarme en cualquier momento sin penalización.
                 </label>
               </div>
 

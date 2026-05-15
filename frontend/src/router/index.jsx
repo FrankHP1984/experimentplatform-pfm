@@ -7,6 +7,7 @@ import ParticipantInvite from '../pages/public/ParticipantInvite'
 import AuthCallback      from '../pages/auth/AuthCallback'
 import LegalNotice       from '../pages/public/LegalNotice'
 import CookiesPolicy     from '../pages/public/CookiesPolicy'
+import PrivacyPolicy     from '../pages/public/PrivacyPolicy'
 
 // Researcher pages
 import Onboarding          from '../pages/researcher/Onboarding'
@@ -49,6 +50,7 @@ export default function AppRouter() {
       <Route path="/invite/:token" element={<ParticipantInvite />} />
       <Route path="/aviso-legal" element={<LegalNotice />} />
       <Route path="/politica-cookies" element={<CookiesPolicy />} />
+      <Route path="/politica-privacidad" element={<PrivacyPolicy />} />
 
       {/* Researcher */}
       <Route path="/onboarding" element={

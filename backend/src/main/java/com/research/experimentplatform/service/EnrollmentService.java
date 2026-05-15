@@ -182,6 +182,13 @@ public class EnrollmentService {
     }
 
     @Transactional
+    public void forceDeleteEnrollment(Long enrollmentId) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found"));
+        enrollmentRepository.delete(enrollment);
+    }
+
+    @Transactional
     public EnrollmentDTO assignGroup(Long enrollmentId, Long groupId) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found"));

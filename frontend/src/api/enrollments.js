@@ -26,3 +26,6 @@ export const assignGroup = (enrollmentId, groupId) =>
 
 export const signConsent = (_enrollmentId) => Promise.resolve()
 
+export const forceDeleteEnrollment = (enrollmentId) =>
+  api.delete(`/enrollments/${enrollmentId}/force`)
+

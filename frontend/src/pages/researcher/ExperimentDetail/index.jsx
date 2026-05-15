@@ -5,7 +5,7 @@ import * as phasesApi      from '../../../api/phases'
 import * as groupsApi      from '../../../api/groups'
 import * as questionsApi   from '../../../api/questions'
 import * as enrollmentsApi from '../../../api/enrollments'
-import { assignGroup }     from '../../../api/enrollments'
+import { assignGroup, forceDeleteEnrollment } from '../../../api/enrollments'
 import { getExperimentInvitations } from '../../../api/invitations'
 import styles from './ExperimentDetail.module.css'
 
@@ -224,6 +224,7 @@ export default function ExperimentDetail() {
   const [confirmModal, setConfirmModal] = useState({ open: false, title: '', desc: '', danger: false, onConfirm: null })
   const [statusLoading,setStatusLoading]= useState(false)
   const [groupFilter,  setGroupFilter]  = useState(null)
+  const [launchError,  setLaunchError]  = useState(null)  // array of strings | null
 
   /* ─── Load experiment + phases + groups + enrollments ─── */
   useEffect(() => {
@@ -291,8 +292,62 @@ export default function ExperimentDetail() {
     })
   }
 
+  /* ─── Launch validation ─── */
+  const validarLanzamiento = () => {
+    const errores = []
+    const design  = exp?.designType
+    const nFases  = phases.length
+    const nGrupos = groups.length
+    const nPregs  = phases.reduce((s, p) => s + (questions[p.id]?.length ?? p.questionCount ?? 0), 0)
+    const fasesSinPreguntas = phases.filter(p => (questions[p.id]?.length ?? p.questionCount ?? 0) === 0)
+
+    if (design === 'PRETEST_POSTTEST') {
+      if (nFases < 2)
+        errores.push(`Faltan fases: este diseño necesita exactamente 2 (Pretest y Postest), y solo tiene ${nFases}.`)
+    }
+
+    if (design === 'BETWEEN_SUBJECTS') {
+      if (nGrupos < 2)
+        errores.push(`Faltan grupos: necesitas al menos 2 grupos (uno por condición experimental), y solo tiene ${nGrupos}.`)
+      if (nFases < 1)
+        errores.push('Falta al menos una fase con preguntas.')
+    }
+
+    if (design === 'LONGITUDINAL') {
+      if (nFases < 2)
+        errores.push(`Faltan fases: un diseño longitudinal necesita al menos 2 puntos temporales, y solo tiene ${nFases}.`)
+      const fasesSinFecha = phases.filter(p => !p.startDate)
+      if (fasesSinFecha.length > 0)
+        errores.push(`${fasesSinFecha.length === phases.length ? 'Ninguna' : `${fasesSinFecha.length}`} fase${fasesSinFecha.length > 1 ? 's' : ''} tiene fecha de inicio configurada. Sin fechas no se controlan las ventanas temporales.`)
+    }
+
+    if (design === 'WITHIN_SUBJECTS') {
+      if (nFases < 2)
+        errores.push(`Faltan fases: cada condición experimental necesita su propia fase, y solo tienes ${nFases}.`)
+    }
+
+    if (design === 'CROSS_SECTIONAL') {
+      if (nFases < 1)
+        errores.push('Falta al menos una fase con las preguntas del estudio.')
+    }
+
+    if (nPregs === 0)
+      errores.push('Ninguna fase tiene preguntas configuradas. Los participantes no tendrían nada que responder.')
+    else if (fasesSinPreguntas.length > 0)
+      errores.push(`${fasesSinPreguntas.length === 1 ? 'La fase' : `${fasesSinPreguntas.length} fases`} "${fasesSinPreguntas.map(f => f.name).join('", "')}" no tiene${fasesSinPreguntas.length > 1 ? 'n' : ''} preguntas.`)
+
+    return errores
+  }
+
   /* ─── Status change ─── */
   const handleStatusChange = async (newStatus) => {
+    if (newStatus === 'ACTIVE') {
+      const errores = validarLanzamiento()
+      if (errores.length > 0) {
+        setLaunchError(errores)
+        return
+      }
+    }
     setStatusLoading(true)
     try {
       const updated = await experimentsApi.patchExperimentStatus(id, newStatus)
@@ -408,7 +463,7 @@ export default function ExperimentDetail() {
 
   const activeEnrollments     = enrollments.filter(e => e.status === 'ACTIVE').length
   const pendingEnrollments    = enrollments.filter(e => e.status === 'PENDING').length
-  const completedEnrollments  = enrollments.filter(e => e.status === 'COMPLETED').length
+  const completedEnrollments  = enrollments.filter(e => e.status === 'COMPLETED' || e.status === 'ACTIVE').length
   const displayedEnrollments  = groupFilter
     ? enrollments.filter(e => e.groupId === groupFilter)
     : enrollments
@@ -542,45 +597,124 @@ export default function ExperimentDetail() {
                 </button>
               </div>
 
-              {/* Banner de sesión única — solo para Cross-Sectional */}
+              {/* Banner — Pretest–Postest */}
+              {exp.designType === 'PRETEST_POSTTEST' && (
+                <div style={{ marginBottom: 20, padding: '16px 20px', background: '#00D4AA10', borderRadius: 10, border: '1px solid #00D4AA33' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#00D4AA', marginBottom: 8 }}>
+                    Diseño Pretest–Postest
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+                    En este diseño los <strong>mismos participantes</strong> son medidos en dos momentos: antes y después de una intervención.
+                    El objetivo es detectar el cambio producido por dicha intervención comparando ambas mediciones.
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
+                    <strong style={{ color: 'var(--fg)' }}>Qué necesitas configurar:</strong>
+                    <ul style={{ margin: '4px 0 0 0', paddingLeft: 20 }}>
+                      <li><strong>2 fases obligatorias.</strong> La primera se etiqueta automáticamente como <em>Pretest</em> y la segunda como <em>Postest</em>. El orden de creación importa.</li>
+                      <li>Cada fase debe tener sus propias <strong>preguntas</strong>. Pueden ser iguales en ambas fases (para comparar directamente) o distintas según tu hipótesis.</li>
+                      <li>La <strong>intervención</strong> ocurre fuera de la plataforma, entre las dos fases. La plataforma no la gestiona, solo recoge las mediciones antes y después.</li>
+                    </ul>
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 12, color: '#00D4AA99' }}>
+                    Consejo: activa el experimento cuando todos los participantes estén inscritos y hayas verificado que el Pretest está bien configurado antes de lanzarlo.
+                  </div>
+                </div>
+              )}
+
+              {/* Banner — Entre grupos */}
+              {exp.designType === 'BETWEEN_SUBJECTS' && (
+                <div style={{ marginBottom: 20, padding: '16px 20px', background: '#6C4DE610', borderRadius: 10, border: '1px solid #6C4DE633' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#A78BF9', marginBottom: 8 }}>
+                    Diseño Entre grupos (Between-Subjects)
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+                    Diferentes grupos de participantes reciben diferentes condiciones experimentales. Ningún participante está en más de un grupo,
+                    por lo que no hay efecto de aprendizaje o contaminación entre condiciones.
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
+                    <strong style={{ color: 'var(--fg)' }}>Qué necesitas configurar:</strong>
+                    <ul style={{ margin: '4px 0 0 0', paddingLeft: 20 }}>
+                      <li><strong>Al menos 2 grupos</strong> (ej. "Control" y "Experimental"). Créalos primero en la pestaña <strong>Grupos</strong> antes de invitar participantes.</li>
+                      <li><strong>Al menos una fase</strong> con sus preguntas. Puedes asignar cada fase a un grupo concreto (solo la ve ese grupo) o dejarla como común (la ven todos).</li>
+                      <li>Los participantes se asignan a un grupo al aceptar la invitación. Una vez asignados, <strong>solo responden las fases de su grupo</strong> más las fases comunes.</li>
+                    </ul>
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 12, color: '#A78BF999' }}>
+                    Consejo: crea los grupos con nombres claros que identifiquen la condición (ej. "Grupo A — sin instrucciones", "Grupo B — con instrucciones") para facilitar el análisis posterior.
+                  </div>
+                </div>
+              )}
+
+              {/* Banner — Transversal */}
               {exp.designType === 'CROSS_SECTIONAL' && (
-                <div style={{ marginBottom: 20, padding: '14px 18px', background: '#FB923C10', borderRadius: 10, border: '1px solid #FB923C33' }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: '#FB923C', marginBottom: 6 }}>
-                    Medición transversal — sesión única
+                <div style={{ marginBottom: 20, padding: '16px 20px', background: '#FB923C10', borderRadius: 10, border: '1px solid #FB923C33' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#FB923C', marginBottom: 8 }}>
+                    Diseño Transversal (Cross-Sectional)
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>
-                    Cada participante responde una sola vez. En cuanto completa todas las preguntas,
-                    su inscripción se marca automáticamente como <strong>Completada</strong>.
-                    No pueden volver a modificar sus respuestas.
+                  <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+                    Todos los participantes son medidos en un <strong>único momento</strong>, sin seguimiento temporal ni condiciones distintas por grupo.
+                    Es el diseño más sencillo: ideal para encuestas, cuestionarios de perfil o estudios de prevalencia.
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
+                    <strong style={{ color: 'var(--fg)' }}>Qué necesitas configurar:</strong>
+                    <ul style={{ margin: '4px 0 0 0', paddingLeft: 20 }}>
+                      <li><strong>Una sola fase</strong> con todas las preguntas del estudio. Técnicamente puedes crear más de una fase, pero este diseño no implica seguimiento temporal.</li>
+                      <li>No es necesario configurar grupos ni fechas. Todos los participantes ven exactamente el mismo cuestionario.</li>
+                      <li>En cuanto un participante responde <strong>todas las preguntas</strong>, su inscripción pasa automáticamente a <em>Completada</em>. No puede modificar sus respuestas después.</li>
+                    </ul>
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 12, color: '#FB923C99' }}>
+                    Consejo: revisa el orden de las preguntas antes de activar el experimento, ya que los participantes no podrán volver atrás una vez completada la sesión.
                   </div>
                 </div>
               )}
 
-              {/* Banner de ventanas temporales — solo para Longitudinal */}
+              {/* Banner — Longitudinal */}
               {exp.designType === 'LONGITUDINAL' && (
-                <div style={{ marginBottom: 20, padding: '14px 18px', background: '#60A5FA10', borderRadius: 10, border: '1px solid #60A5FA33' }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: '#60A5FA', marginBottom: 6 }}>
-                    Ventanas temporales activas
+                <div style={{ marginBottom: 20, padding: '16px 20px', background: '#60A5FA10', borderRadius: 10, border: '1px solid #60A5FA33' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#60A5FA', marginBottom: 8 }}>
+                    Diseño Longitudinal
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>
-                    Cada fase solo acepta respuestas dentro de su ventana de fechas.
-                    Los participantes no pueden responder antes de que empiece ni después de que cierre.
-                    El badge de estado se actualiza en tiempo real según la fecha actual.
+                  <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+                    Los <strong>mismos participantes</strong> son seguidos a lo largo del tiempo y medidos en múltiples momentos (T1, T2, T3…).
+                    Permite estudiar cómo evolucionan las variables de interés a lo largo de semanas, meses o años.
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
+                    <strong style={{ color: 'var(--fg)' }}>Qué necesitas configurar:</strong>
+                    <ul style={{ margin: '4px 0 0 0', paddingLeft: 20 }}>
+                      <li><strong>Al menos 2 fases</strong>, cada una representando un punto temporal (ej. T1 = semana 0, T2 = semana 4, T3 = semana 8).</li>
+                      <li>Cada fase debe tener <strong>fecha de inicio y fecha de cierre</strong>. Los participantes solo pueden responder esa fase dentro de esa ventana de tiempo.</li>
+                      <li>El badge de estado de cada fase (<em>Próxima / Ventana abierta / Cerrada</em>) se actualiza automáticamente en función de la fecha actual.</li>
+                      <li>Si una fase no tiene fechas configuradas, <strong>no se controla la ventana</strong> y los participantes podrían responderla en cualquier momento.</li>
+                    </ul>
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 12, color: '#60A5FA99' }}>
+                    Consejo: planifica las fechas con margen suficiente para que todos los participantes puedan responder dentro de cada ventana, especialmente en estudios con alta carga de seguimiento.
                   </div>
                 </div>
               )}
 
-              {/* Banner de contrabalanceo — solo para Within-Subjects */}
+              {/* Banner — Intra-sujeto */}
               {exp.designType === 'WITHIN_SUBJECTS' && (
-                <div style={{ marginBottom: 20, padding: '14px 18px', background: '#F472B610', borderRadius: 10, border: '1px solid #F472B633' }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: '#EC4899', marginBottom: 6 }}>
-                    Contrabalanceo activado
+                <div style={{ marginBottom: 20, padding: '16px 20px', background: '#F472B610', borderRadius: 10, border: '1px solid #F472B633' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#EC4899', marginBottom: 8 }}>
+                    Diseño Intra-sujeto (Within-Subjects)
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>
-                    Cada participante verá las condiciones en un orden diferente para evitar el efecto de orden.
-                    El sistema asigna secuencias rotadas automaticamente al inscribirse:
-                    participante 1 → A-B-C, participante 2 → B-C-A, participante 3 → C-A-B, etc.
-                    Puedes ver la secuencia de cada participante en la pestana <strong>Participantes</strong>.
+                  <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+                    Los <strong>mismos participantes</strong> pasan por <strong>todas las condiciones</strong> experimentales, cada una representada por una fase.
+                    Al exponer a todos al mismo conjunto de condiciones se eliminan las diferencias individuales como variable de confusión.
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
+                    <strong style={{ color: 'var(--fg)' }}>Qué necesitas configurar:</strong>
+                    <ul style={{ margin: '4px 0 0 0', paddingLeft: 20 }}>
+                      <li><strong>Al menos 2 fases</strong>, una por condición experimental (ej. "Condición A — con música", "Condición B — en silencio").</li>
+                      <li>No necesitas crear grupos. El sistema asigna automáticamente a cada participante una <strong>secuencia rotada</strong> de condiciones al inscribirse (contrabalanceo).</li>
+                      <li>El contrabalanceo sigue un esquema de rotación: participante 1 → A-B-C, participante 2 → B-C-A, participante 3 → C-A-B, etc. Esto neutraliza el <em>efecto de orden</em>.</li>
+                      <li>Puedes consultar la secuencia asignada a cada participante en la pestaña <strong>Participantes</strong>.</li>
+                    </ul>
+                  </div>
+                  <div style={{ marginTop: 10, fontSize: 12, color: '#EC489999' }}>
+                    Consejo: asegúrate de que haya suficiente tiempo o separación entre condiciones para evitar el efecto de arrastre (carry-over effect), especialmente si las condiciones implican aprendizaje o fatiga.
                   </div>
                 </div>
               )}
@@ -953,21 +1087,6 @@ export default function ExperimentDetail() {
                   </div>
                 )}
 
-                <div className={styles.inviteBanner}>
-                  <div className={styles.inviteBannerLeft}>
-                    <div className={styles.inviteBannerTitle}>Enlace de invitacion activo</div>
-                    <div className={styles.inviteBannerDesc}>Comparte este enlace con los participantes que quieras incluir en el estudio.</div>
-                  </div>
-                  <div className={styles.inviteRow}>
-                    <div className={styles.inviteBox}>{window.location.origin}/invite/{id}</div>
-                    <button className={`${styles.topbarBtn} ${styles.topbarBtnGhost}`}
-                      onClick={() => navigator.clipboard.writeText(`${window.location.origin}/invite/${id}`)}>
-                      <IcoCopy />
-                      Copiar
-                    </button>
-                  </div>
-                </div>
-
                 <div className={styles.sectionHead}>
                   <div className={styles.sectionTitle}>
                     Participantes inscritos
@@ -1054,10 +1173,28 @@ export default function ExperimentDetail() {
                               <td className={styles.tdMuted}>
                                 {enroll.enrolledAt ? fmtDate(enroll.enrolledAt) : '—'}
                               </td>
-                              <td>
+                              <td style={{ display: 'flex', gap: 4 }}>
                                 <button className={styles.iconBtn}
                                   onClick={() => navigate(`/experiments/${id}/participants/${enroll.id}`)}>
                                   <IcoDots />
+                                </button>
+                                <button
+                                  className={styles.iconBtn}
+                                  style={{ color: 'var(--red, #f87171)' }}
+                                  title="Eliminar participante"
+                                  onClick={() => setConfirmModal({
+                                    open: true,
+                                    title: 'Eliminar participante',
+                                    desc: `¿Seguro que quieres eliminar al participante #${enroll.participantId} del estudio? Se borrarán también todas sus respuestas. Esta acción no se puede deshacer.`,
+                                    danger: true,
+                                    onConfirm: async () => {
+                                      await forceDeleteEnrollment(enroll.id)
+                                      setEnrollments(prev => prev.filter(e => e.id !== enroll.id))
+                                      setConfirmModal(c => ({ ...c, open: false }))
+                                    }
+                                  })}
+                                >
+                                  <IcoTrash />
                                 </button>
                               </td>
                             </tr>
@@ -1148,6 +1285,33 @@ export default function ExperimentDetail() {
         {...confirmModal}
         onCancel={() => setConfirmModal(c => ({ ...c, open: false }))}
       />
+
+      {/* ─── Modal de error de lanzamiento ─── */}
+      {launchError && (
+        <div className={styles.overlay} onClick={() => setLaunchError(null)}>
+          <div className={styles.modal} style={{ maxWidth: 440 }} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHead}>
+              <span className={styles.modalTitle}>No se puede activar el experimento</span>
+              <button className={styles.modalClose} onClick={() => setLaunchError(null)}><IcoX /></button>
+            </div>
+            <p className={styles.modalSub} style={{ marginBottom: 12 }}>
+              Antes de lanzar el experimento hay que resolver lo siguiente:
+            </p>
+            <ul style={{ margin: '0 0 20px 0', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {launchError.map((msg, i) => (
+                <li key={i} style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
+                  {msg}
+                </li>
+              ))}
+            </ul>
+            <div className={styles.modalFooter}>
+              <button className={`${styles.btnModal} ${styles.btnPrimary}`} onClick={() => setLaunchError(null)}>
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

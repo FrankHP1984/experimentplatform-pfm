@@ -12,7 +12,8 @@
       "PowerShell(npm install *)",
       "PowerShell(netlify *)",
       "PowerShell($data = '{\"site_id\":\"rococo-rolypoly-1a4e35\",\"body\":{\"name\":\"seraphon\"}}'; netlify api updateSite --data $data)",
-      "PowerShell(railway deployment *)"
+      "PowerShell(railway deployment *)",
+      "PowerShell(Get-Command *)"
     ]
   }
 }
