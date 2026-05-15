@@ -60,10 +60,9 @@ public class ResponseService {
         LocalDateTime now = LocalDateTime.now();
         var phase = question.getPhase();
         var designType = enrollment.getExperiment().getDesignType();
-        // Date-window check only applies to time-gated designs (LONGITUDINAL, BETWEEN_SUBJECTS, CROSS_SECTIONAL).
-        // PRETEST_POSTTEST and WITHIN_SUBJECTS are sequenced by completion, not by calendar.
+        // Date-window check only applies to time-gated designs (LONGITUDINAL, CROSS_SECTIONAL).
+        // PRETEST_POSTTEST, BETWEEN_SUBJECTS and WITHIN_SUBJECTS are sequenced by completion, not by calendar.
         boolean isTimeGated = designType == DesignType.LONGITUDINAL
-                || designType == DesignType.BETWEEN_SUBJECTS
                 || designType == DesignType.CROSS_SECTIONAL;
         if (isTimeGated) {
             if (phase.getStartDate() != null && phase.getStartDate().isAfter(now)) {
@@ -85,11 +84,21 @@ public class ResponseService {
             }
         }
 
-        // En PRETEST_POSTTEST bloqueamos una fase hasta que la anterior esté completamente respondida
-        if (enrollment.getExperiment().getDesignType() == DesignType.PRETEST_POSTTEST) {
+        // En PRETEST_POSTTEST y BETWEEN_SUBJECTS bloqueamos una fase hasta que la anterior esté completamente respondida
+        if (enrollment.getExperiment().getDesignType() == DesignType.PRETEST_POSTTEST ||
+            enrollment.getExperiment().getDesignType() == DesignType.BETWEEN_SUBJECTS) {
             List<Phase> fases = phaseRepository.findByExperimentIdOrderByPhaseOrderAsc(
                     enrollment.getExperiment().getId()
             );
+
+            // Para BETWEEN_SUBJECTS, filtrar solo las fases del participante (comunes + su grupo)
+            if (enrollment.getExperiment().getDesignType() == DesignType.BETWEEN_SUBJECTS) {
+                Long participantGroupId = enrollment.getGroup() != null ? enrollment.getGroup().getId() : null;
+                fases = fases.stream()
+                        .filter(f -> f.getGroup() == null || 
+                                    (participantGroupId != null && f.getGroup().getId().equals(participantGroupId)))
+                        .toList();
+            }
 
             int indiceFaseActual = -1;
             for (int i = 0; i < fases.size(); i++) {
