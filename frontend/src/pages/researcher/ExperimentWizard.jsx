@@ -93,10 +93,11 @@ export default function ExperimentWizard() {
   const { id }   = useParams()
   const navigate = useNavigate()
 
-  const [step,    setStep]    = useState(1)
-  const [saving,  setSaving]  = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState('')
+  const [step,      setStep]      = useState(1)
+  const [saving,    setSaving]    = useState(false)
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState('')   // error de carga (página completa)
+  const [formError, setFormError] = useState('')   // error de validación inline
 
   const [basic, setBasic] = useState({
     title: '', description: '', design: 'PRETEST_POSTTEST',
@@ -113,7 +114,7 @@ export default function ExperimentWizard() {
   const [questionModal, setQuestionModal] = useState({ open: false })
   const [phaseForm,     setPhaseForm]     = useState({ name: '', startDate: '', endDate: '', description: '' })
   const [groupForm,     setGroupForm]     = useState({ name: '', description: '', color: '#6C4DE6' })
-  const [qForm,         setQForm]         = useState({ text: '', type: 'NUMBER', required: true })
+  const [qForm,         setQForm]         = useState({ text: '', type: 'NUMBER', required: true, options: [] })
   const [modalError,    setModalError]    = useState('')
   const [dateError,     setDateError]     = useState('')
 
@@ -165,6 +166,19 @@ export default function ExperimentWizard() {
     return 'pending'
   }
 
+  const validateBasic = () => {
+    if (!basic.title.trim()) {
+      setFormError('El título del experimento es obligatorio')
+      return false
+    }
+    if (basic.startDate && basic.endDate && basic.endDate <= basic.startDate) {
+      setDateError('La fecha de fin debe ser posterior a la de inicio')
+      return false
+    }
+    setFormError('')
+    return true
+  }
+
   const saveBasic = useCallback(async () => {
     setSaving(true)
     try {
@@ -178,7 +192,10 @@ export default function ExperimentWizard() {
         consentText:    basic.consentText    || null,
         debriefingText: basic.debriefingText || null,
       })
-    } catch { /* silent */ }
+    } catch (err) {
+      setFormError(err.message || 'Error al guardar los datos básicos')
+      throw err
+    }
     finally { setSaving(false) }
   }, [id, basic])
 
@@ -201,7 +218,7 @@ export default function ExperimentWizard() {
     setModalError(''); setSaving(true)
     try {
       const toDateTime = (d) => d ? d + 'T00:00:00' : null
-      const data = { name: phaseForm.name.trim(), startDate: toDateTime(phaseForm.startDate), endDate: toDateTime(phaseForm.endDate) }
+      const data = { name: phaseForm.name.trim(), description: phaseForm.description?.trim() || null, startDate: toDateTime(phaseForm.startDate), endDate: toDateTime(phaseForm.endDate) }
       if (phaseModal.editing) {
         const updated = await phasesApi.updatePhase(id, phaseModal.editing.id, data)
         setPhases(ps => ps.map(p => p.id === updated.id ? updated : p))
@@ -266,7 +283,7 @@ export default function ExperimentWizard() {
 
   /* ── question CRUD ── */
   const openQuestionModal = () => {
-    setQForm({ text: '', type: 'NUMBER', required: true })
+    setQForm({ text: '', type: 'NUMBER', required: true, options: [] })
     setModalError('')
     setQuestionModal({ open: true })
   }
@@ -274,14 +291,22 @@ export default function ExperimentWizard() {
   const confirmQuestion = async () => {
     if (!qForm.text.trim())  { setModalError('El texto es obligatorio'); return }
     if (!activePhaseTab)     { setModalError('Selecciona una fase primero'); return }
+    if (qForm.type === 'MULTIPLE_CHOICE') {
+      const validOpts = qForm.options.filter(o => o.trim())
+      if (validOpts.length < 2) { setModalError('Añade al menos 2 opciones'); return }
+    }
     setModalError(''); setSaving(true)
     try {
-      const created = await questionsApi.createQuestion(activePhaseTab, {
+      const payload = {
         text:          qForm.text.trim(),
         type:          qForm.type,
         required:      qForm.required,
         questionOrder: (questions[activePhaseTab] || []).length + 1,
-      })
+      }
+      if (qForm.type === 'MULTIPLE_CHOICE') {
+        payload.options = qForm.options.filter(o => o.trim())
+      }
+      const created = await questionsApi.createQuestion(activePhaseTab, payload)
       setQuestions(q => ({ ...q, [activePhaseTab]: [...(q[activePhaseTab] || []), created] }))
       setQuestionModal({ open: false })
     } catch (err) { setModalError(err.message || 'Error al guardar') }
@@ -299,12 +324,16 @@ export default function ExperimentWizard() {
   const goTo = (n) => { if (n >= 1 && n <= 5) setStep(n) }
 
   const handleNext = async () => {
-    if (step === 1) await saveBasic()
+    if (step === 1) {
+      if (!validateBasic()) return
+      try { await saveBasic() } catch { return }
+    }
     if (step < 5) goTo(step + 1)
     else handleFinish()
   }
 
   const handleFinish = async () => {
+    if (step === 1 && !validateBasic()) return
     setSaving(true)
     try {
       await saveBasic()
@@ -313,14 +342,14 @@ export default function ExperimentWizard() {
   }
 
   const handleActivate = async () => {
+    if (!validateBasic()) return
     setSaving(true)
     try {
       await saveBasic()
       await experimentsApi.patchExperimentStatus(id, 'ACTIVE')
       navigate(`/experiments/${id}`)
     } catch (err) {
-      console.log('Error activando experimento:', err)
-      alert('No se pudo activar el experimento')
+      setFormError(err.message || 'No se pudo activar el experimento')
       setSaving(false)
     }
   }
@@ -383,6 +412,12 @@ export default function ExperimentWizard() {
                 <h1 className={styles.stepTitle}>Configuracion basica</h1>
                 <p className={styles.stepDesc}>Define el nombre, objetivo y estructura temporal del experimento.</p>
               </div>
+
+              {formError && (
+                <div style={{ marginBottom: 20, padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, fontSize: 13, color: '#f87171' }}>
+                  {formError}
+                </div>
+              )}
 
               <div className={styles.formSection}>
                 <div className={styles.formSectionTitle}>Identificacion</div>
@@ -459,12 +494,12 @@ export default function ExperimentWizard() {
                       value={basic.endDate}
                       onChange={e => {
                         const val = e.target.value
+                        setBasic(b => ({ ...b, endDate: val }))
                         if (basic.startDate && val && val <= basic.startDate) {
                           setDateError('La fecha de fin debe ser posterior a la de inicio')
-                          return
+                        } else {
+                          setDateError('')
                         }
-                        setDateError('')
-                        setBasic(b => ({ ...b, endDate: val }))
                       }}
                     />
                   </div>
@@ -715,7 +750,7 @@ export default function ExperimentWizard() {
                   {[
                     { ok: basic.title.length > 0, text: 'Titulo del experimento' },
                     { ok: fasesOk,                 text: `${phases.length} fase(s) definida(s)`, hint: hintFases },
-                    { ok: groups.length >= 2,      text: `${groups.length} grupo(s) configurado(s)`, hint: groups.length < 2 ? 'Necesitas al menos 2 grupos' : '' },
+                    { ok: !needsGroups || groups.length >= 2, text: `${groups.length} grupo(s) configurado(s)`, hint: needsGroups && groups.length < 2 ? 'Entre-sujetos necesita al menos 2 grupos' : '' },
                     { ok: totalQuestions > 0,      text: `${totalQuestions} pregunta(s) en total`, hint: totalQuestions === 0 ? 'Añade preguntas en el paso anterior' : '' },
                   ].map((c, i) => (
                     <div key={i} className={styles.checkItem}>
@@ -732,7 +767,9 @@ export default function ExperimentWizard() {
               </div>
 
               {(() => {
-                const allOk = fasesOk && groups.length >= 2 && totalQuestions > 0
+                const needsGroups = basic.design === 'BETWEEN_SUBJECTS'
+                const groupsOk = !needsGroups || groups.length >= 2
+                const allOk = fasesOk && groupsOk && totalQuestions > 0
                 return (
                   <div className={styles.launchBox}>
                     <div className={styles.launchIcon}><IcoBolt /></div>
@@ -877,13 +914,42 @@ export default function ExperimentWizard() {
               <div
                 key={opt.type}
                 className={`${styles.typeOption} ${qForm.type === opt.type ? styles.typeOptionSelected : ''}`}
-                onClick={() => setQForm(f => ({...f, type: opt.type}))}
+                onClick={() => setQForm(f => ({ ...f, type: opt.type, options: opt.type === 'MULTIPLE_CHOICE' ? f.options : [] }))}
               >
                 <div className={styles.typeOptionName}>{opt.label}</div>
               </div>
             ))}
           </div>
         </div>
+        {qForm.type === 'MULTIPLE_CHOICE' && (
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>Opciones de respuesta <span style={{ color: 'var(--danger,#f87171)' }}>*</span></label>
+            {qForm.options.map((opt, idx) => (
+              <div key={idx} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                <input
+                  className={styles.fieldInput}
+                  value={opt}
+                  onChange={e => {
+                    const next = [...qForm.options]
+                    next[idx] = e.target.value
+                    setQForm(f => ({ ...f, options: next }))
+                    setModalError('')
+                  }}
+                  placeholder={`Opción ${idx + 1}`}
+                />
+                <button type="button" className={styles.iconBtn} style={{ flexShrink: 0 }}
+                  onClick={() => setQForm(f => ({ ...f, options: f.options.filter((_, i) => i !== idx) }))}>
+                  <IcoX />
+                </button>
+              </div>
+            ))}
+            <button type="button" className={styles.addBtn} style={{ marginTop: 4 }}
+              onClick={() => setQForm(f => ({ ...f, options: [...f.options, ''] }))}>
+              <IcoPlus /> Añadir opción
+            </button>
+          </div>
+        )}
+
         <div className={styles.field}>
           <label className={`${styles.fieldLabel} ${styles.required}`}>Texto de la pregunta</label>
           <textarea className={styles.fieldTextarea} value={qForm.text} onChange={e => { setQForm(f => ({...f, text: e.target.value})); setModalError('') }} placeholder="Escribe la pregunta tal como la vera el participante..." rows={3} autoFocus />

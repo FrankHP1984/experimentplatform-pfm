@@ -1173,11 +1173,7 @@ export default function ExperimentDetail() {
                               <td className={styles.tdMuted}>
                                 {enroll.enrolledAt ? fmtDate(enroll.enrolledAt) : '—'}
                               </td>
-                              <td style={{ display: 'flex', gap: 4 }}>
-                                <button className={styles.iconBtn}
-                                  onClick={() => navigate(`/experiments/${id}/participants/${enroll.id}`)}>
-                                  <IcoDots />
-                                </button>
+                              <td>
                                 <button
                                   className={styles.iconBtn}
                                   style={{ color: 'var(--red, #f87171)' }}

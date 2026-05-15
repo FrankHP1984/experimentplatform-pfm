@@ -40,6 +40,10 @@ export default function PhaseModal({ open, initial, designType, groups, onClose,
   const handleSubmit = async e => {
     e.preventDefault()
     if (!form.name.trim()) { setError('El nombre es obligatorio'); return }
+    if (form.startDate && form.endDate && form.endDate <= form.startDate) {
+      setError('La fecha de fin debe ser posterior a la de inicio')
+      return
+    }
     setLoading(true); setError('')
     try {
       const payload = {

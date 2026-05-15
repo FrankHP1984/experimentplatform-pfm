@@ -59,11 +59,19 @@ public class ResponseService {
 
         LocalDateTime now = LocalDateTime.now();
         var phase = question.getPhase();
-        if (phase.getStartDate() != null && phase.getStartDate().isAfter(now)) {
-            throw new BadRequestException("This phase has not started yet");
-        }
-        if (phase.getEndDate() != null && phase.getEndDate().isBefore(now)) {
-            throw new BadRequestException("This phase has already ended");
+        var designType = enrollment.getExperiment().getDesignType();
+        // Date-window check only applies to time-gated designs (LONGITUDINAL, BETWEEN_SUBJECTS, CROSS_SECTIONAL).
+        // PRETEST_POSTTEST and WITHIN_SUBJECTS are sequenced by completion, not by calendar.
+        boolean isTimeGated = designType == DesignType.LONGITUDINAL
+                || designType == DesignType.BETWEEN_SUBJECTS
+                || designType == DesignType.CROSS_SECTIONAL;
+        if (isTimeGated) {
+            if (phase.getStartDate() != null && phase.getStartDate().isAfter(now)) {
+                throw new BadRequestException("This phase has not started yet");
+            }
+            if (phase.getEndDate() != null && phase.getEndDate().isBefore(now)) {
+                throw new BadRequestException("This phase has already ended");
+            }
         }
 
         // En Between-Subjects la fase debe ser común (sin grupo) o del grupo del participante

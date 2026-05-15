@@ -7,82 +7,94 @@ import * as enrollmentsApi from '../../api/enrollments'
 import * as questionsApi   from '../../api/questions'
 import * as responsesApi   from '../../api/responses'
 import styles from './ResponsesAnalytics.module.css'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, Cell, ResponsiveContainer } from 'recharts'
 
-const TOOLTIP_STYLE = {
-  contentStyle: { background: '#0D1729', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 },
-  labelStyle:   { color: '#E8EEF8' },
-  itemStyle:    { color: '#A0AEC0' }
-}
-const TICK   = { fill: '#6B7A99', fontSize: 12 }
 const COLORS = ['#6C4DE6', '#00D4AA', '#60A5FA', '#F472B6']
 
-/* ─── Gráfico de barras: media por grupo ─── */
-function ComparisonChart({ question, responses, enrollmentMap, groupMap }) {
+/* ─── Media por grupo: barras CSS ─── */
+function ComparisonStats({ question, responses, enrollmentMap, groupMap }) {
   const grupos = Object.values(groupMap)
-  const datos  = []
 
-  for (let i = 0; i < grupos.length; i++) {
-    const g = grupos[i]
-    let suma  = 0
-    let cuenta = 0
-    for (const r of responses) {
-      if (r.question_id !== question.id) continue
-      const inscripcion = enrollmentMap[r.enrollment_id]
-      if (!inscripcion || inscripcion.group_id !== g.id) continue
-      const num = parseFloat(r.value)
-      if (!isNaN(num)) { suma += num; cuenta++ }
-    }
-    let media = 0
-    if (cuenta > 0) {
-      media = parseFloat((suma / cuenta).toFixed(2))
-    }
-    datos.push({ grupo: g.name, media: media, color: g.color || COLORS[i] })
-  }
+  const datos = grupos.length > 0
+    ? grupos.map((g, i) => {
+        let suma = 0, cuenta = 0
+        for (const r of responses) {
+          if (r.question_id !== question.id) continue
+          const insc = enrollmentMap[r.enrollment_id]
+          if (!insc || insc.group_id !== g.id) continue
+          const num = parseFloat(r.value)
+          if (!isNaN(num)) { suma += num; cuenta++ }
+        }
+        return { label: g.name, color: g.color || COLORS[i], media: cuenta > 0 ? parseFloat((suma / cuenta).toFixed(2)) : null, n: cuenta }
+      })
+    : (() => {
+        let suma = 0, cuenta = 0
+        for (const r of responses) {
+          if (r.question_id !== question.id) continue
+          const num = parseFloat(r.value)
+          if (!isNaN(num)) { suma += num; cuenta++ }
+        }
+        return [{ label: 'Todos', color: COLORS[0], media: cuenta > 0 ? parseFloat((suma / cuenta).toFixed(2)) : null, n: cuenta }]
+      })()
+
+  const maxVal = question.type === 'SCALE' ? 10 : Math.max(...datos.map(d => d.media || 0), 1)
+
+  if (datos.every(d => d.n === 0)) return <p className={styles.empty}>Sin respuestas aún</p>
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={datos} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-        <XAxis dataKey="grupo" tick={TICK} />
-        <YAxis domain={[0, 10]} tick={TICK} />
-        <Tooltip {...TOOLTIP_STYLE} />
-        <Bar dataKey="media" radius={[4, 4, 0, 0]} name="Media">
-          {datos.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '4px 0' }}>
+      {datos.map((d, i) => (
+        <div key={i}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: 'var(--muted)' }}>{d.label}</span>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>
+              {d.media !== null ? d.media : '—'}
+              <span style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 11, marginLeft: 5 }}>({d.n} resp.)</span>
+            </span>
+          </div>
+          <div style={{ height: 6, background: 'rgba(255,255,255,0.07)', borderRadius: 4 }}>
+            <div style={{ height: '100%', width: `${d.media !== null ? Math.min((d.media / maxVal) * 100, 100) : 0}%`, background: d.color, borderRadius: 4, transition: 'width 0.4s ease' }} />
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }
 
-/* ─── Gráfico de opción múltiple ─── */
-function MultipleChoiceChart({ question, responses }) {
+/* ─── Opción múltiple: lista con barras CSS ─── */
+function MultipleChoiceStats({ question, responses }) {
   const conteos = {}
   for (const r of responses) {
     if (r.question_id !== question.id) continue
     const opcion = String(r.value)
-    if (conteos[opcion] === undefined) conteos[opcion] = 0
-    conteos[opcion]++
+    conteos[opcion] = (conteos[opcion] || 0) + 1
   }
 
-  const datos = []
-  for (const opcion in conteos) {
-    datos.push({ opcion: opcion, count: conteos[opcion] })
-  }
+  const datos = Object.entries(conteos).map(([opcion, count]) => ({ opcion, count }))
   datos.sort((a, b) => b.count - a.count)
+  const total = datos.reduce((s, d) => s + d.count, 0)
 
-  if (datos.length === 0) {
-    return <p className={styles.empty}>Sin respuestas aún</p>
-  }
+  if (datos.length === 0) return <p className={styles.empty}>Sin respuestas aún</p>
 
   return (
-    <ResponsiveContainer width="100%" height={Math.max(160, datos.length * 44)}>
-      <BarChart data={datos} layout="vertical" margin={{ top: 5, right: 30, bottom: 5, left: 80 }}>
-        <XAxis type="number" tick={TICK} allowDecimals={false} />
-        <YAxis type="category" dataKey="opcion" tick={TICK} width={75} />
-        <Tooltip {...TOOLTIP_STYLE} formatter={v => [`${v} respuestas`]} />
-        <Bar dataKey="count" fill="#00D4AA" radius={[0, 4, 4, 0]} name="Respuestas" />
-      </BarChart>
-    </ResponsiveContainer>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '4px 0' }}>
+      {datos.map((d, i) => (
+        <div key={i}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ fontSize: 13, color: 'var(--muted)', flex: 1, marginRight: 12 }}>{d.opcion}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)', whiteSpace: 'nowrap' }}>
+              {d.count}
+              <span style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 11, marginLeft: 5 }}>({Math.round((d.count / total) * 100)}%)</span>
+            </span>
+          </div>
+          <div style={{ height: 6, background: 'rgba(255,255,255,0.07)', borderRadius: 4 }}>
+            <div style={{ height: '100%', width: `${(d.count / total) * 100}%`, background: '#00D4AA', borderRadius: 4, transition: 'width 0.4s ease' }} />
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -183,7 +195,7 @@ export default function ResponsesAnalytics() {
     }
 
     const csv    = filas.map(fila => fila.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob   = new Blob([csv], { type: 'text/csv' })
+    const blob   = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
     const url    = URL.createObjectURL(blob)
     const enlace = document.createElement('a')
     enlace.href     = url
@@ -339,16 +351,8 @@ export default function ResponsesAnalytics() {
                     <div className={styles.chartTitle}>{q.text}</div>
                     <div className={styles.chartSub}>{q.type === 'SCALE' ? 'Escala 1-10' : 'Numérica'} · Media por grupo · {q.phase_name}</div>
                   </div>
-                  <div className={styles.chartLegend}>
-                    {groups.slice(0, 3).map((g, i) => (
-                      <div key={g.id} className={styles.legendItem}>
-                        <div className={styles.legendDot} style={{ background: g.color || COLORS[i] }} />
-                        {g.name}
-                      </div>
-                    ))}
-                  </div>
                 </div>
-                <ComparisonChart question={q} responses={filteredResponses}
+                <ComparisonStats question={q} responses={filteredResponses}
                   enrollmentMap={enrollmentMap} groupMap={groupMap} />
               </div>
             ))}
@@ -361,7 +365,7 @@ export default function ResponsesAnalytics() {
                     <div className={styles.chartSub}>Opción múltiple · {q.phase_name} · n={filteredResponses.filter(r => r.question_id === q.id).length}</div>
                   </div>
                 </div>
-                <MultipleChoiceChart question={q} responses={filteredResponses} />
+                <MultipleChoiceStats question={q} responses={filteredResponses} />
               </div>
             ))}
 
